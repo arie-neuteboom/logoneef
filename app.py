@@ -1,66 +1,54 @@
 import marimo
 
-__generated_with = "0.23.15"
+__generated_with = "0.23.9"
 app = marimo.App(css_file="logoneef.css")
 
 with app.setup(hide_code=True):
-    import io
     from dataclasses import dataclass
-    from datetime import datetime
+    from html import escape as html_escape
+    from itertools import accumulate
+    from pathlib import Path
 
-    import cairosvg  # noqa: F401
     import drawsvg as draw
     import marimo as mo
 
 
 @app.cell(hide_code=True)
-def _(logo):
+def _(iframe_button, logo):
     title = "# Welkom bij Logoneef"
     text = (
         "Hieronder staat een logoneef met twee knoppen om het logo als svg of "
         "als pdf bestand te downloaden. Het logo is aan te passen met de code "
         "die daar weer onderstaat. Pas de code en daarmee het logo gerust aan "
-        "naar jouw wensen. Onthoud echter dat de aangepaste code verloren gaat "
-        "zodra je deze app verlaat."
+        "naar jouw wensen."
     )
     footer = (
         "Licentie: [PolyForm Noncommercial 1.0.0](LICENSE) · "
         "Broncode: [GitHub](https://github.com/arie-neuteboom/logoneef)"
     )
 
-    def get_filename(stem: str, ext: str) -> str:
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        return f"{stem}_{timestamp}.{ext}"
-
-    def svg_to_pdf(svg_string: str, width: float, height: float) -> bytes:
-        pdf_binary = io.BytesIO()
-        cairosvg.svg2pdf(
-            bytestring=svg_string.encode("utf-8"),
-            write_to=pdf_binary,
-            output_width=width,
-            output_height=height,
-        )
-        return pdf_binary.getvalue()
-
-    download_svg = mo.download(
-        data=logo.as_svg().encode("utf-8"),
-        filename=get_filename(stem="logoneef", ext="svg"),
-        mimetype="image/svg",
+    download_svg = iframe_button(
+        logo=logo,
         label="Download logo as svg",
+        action="Svg",
     )
-    download_pdf = mo.download(
-        data=svg_to_pdf(logo.as_svg(), logo.width, logo.height),
-        filename=get_filename(stem="logoneef", ext="pdf"),
-        mimetype="application/pdf",
+    download_pdf = iframe_button(
+        logo=logo,
         label="Download logo as pdf",
+        action="Pdf",
+        extra_data=f' data-width="{logo.width}" data-height="{logo.height}"',
+        scripts=(
+            '<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>\n'
+            '<script src="https://unpkg.com/svg2pdf.js@2.2.3/dist/svg2pdf.umd.min.js"></script>'
+        ),
     )
     mo.vstack(
         [
             mo.md(title).center(),
             mo.md(text).center(),
             mo.Html(logo.as_svg()).center(),
-            download_pdf,
             download_svg,
+            download_pdf,
             mo.md(footer).center(),
         ]
     ).center()
@@ -73,16 +61,17 @@ def _(append_neefje):
     cm = 96 / 2.54  # centimeter pixel ratio
 
     def create_logo() -> draw.Drawing:
-        d_width = 13 * cm
-        d_heigth = 10 * cm
+        d_width = 7.2 * cm
+        d_heigth = 5.0 * cm
         d = draw.Drawing(width=d_width, height=d_heigth, origin="center")
-        b = 0.75 * cm  # radius head
+        b = 0.4 * cm  # radius head
         q_small = 1.5  # head-body ratio small neefje
         q_big = 2  # head-body ratio big neefje
         r = b / 2.5
         r_l = r  # fillet left
         r_r = r  # fillet right
         h_big_neef = (3 + q_big) * b
+        n = 5  # number of small neefjes
 
         kwargs_format = {
             "fill": "none",
@@ -99,15 +88,21 @@ def _(append_neefje):
         }
         kw_list = (
             [{**kwargs_default, "q": q_big, "r_l": r_l}]
-            + [{**kwargs_default, "q": q_small}] * 5
+            + [{**kwargs_default, "q": q_small}] * n
             + [{**kwargs_default, "q": q_big, "r_r": r_r}]
         )
 
+        b_incr = [kw_list[i - 1]["b"] + kw_list[i]["b"] for i in range(1, len(kw_list))]
+
+        x_pos = list(accumulate(b_incr, initial=-sum(b_incr) / 2))
+        print(len(x_pos))
+
         for i, kw in enumerate(kw_list):
-            append_neefje(**kw, x=(i - 3) * 2 * b)  # type: ignore
+            append_neefje(**kw, x=x_pos[i])  # type: ignore
 
         # Add rounded border
-        w_border = 2 * b + len(kw_list) * 2 * b
+        w_logo = 2 * sum(kw["b"] for kw in kw_list)
+        w_border = 2 * b + w_logo
         h_border = 2 * b + h_big_neef
         d.append(
             draw.Rectangle(
@@ -131,6 +126,18 @@ def _(append_neefje):
         #     draw.Line(
         #         0, -d_heigth / 2, 0, d_heigth / 2,
         #         stroke="red", stroke_dasharray="8,8",
+        #     )
+        # )
+
+        # # Uncomment to display bounding box
+        # d.append(
+        #     draw.Rectangle(
+        #         x=-d_width / 2,
+        #         y=-d_heigth / 2,
+        #         width=d_width,
+        #         height=d_heigth,
+        #         fill="none",
+        #         stroke="red",
         #     )
         # )
 
@@ -219,6 +226,52 @@ def _():
         d.append(p)
 
     return (append_neefje,)
+
+
+@app.cell(hide_code=True)
+def _():
+    _this_dir = Path(__file__).parent
+    _css = (_this_dir / "download.css").read_text(encoding="utf-8")
+    _js = (_this_dir / "download.js").read_text(encoding="utf-8")
+    _icon = (
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" '
+        'fill="none" stroke="currentColor" stroke-width="2" '
+        'stroke-linecap="round" stroke-linejoin="round">'
+        '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>'
+        '<polyline points="7 10 12 15 17 10"/>'
+        '<line x1="12" y1="15" x2="12" y2="3"/></svg>'
+    )
+    _body_style = (
+        "margin: 0; display: flex; "
+        "align-items: center; justify-content: center; height: 100vh;"
+    )
+
+    def iframe_button(
+        logo: draw.Drawing,
+        label: str,
+        action: str,
+        extra_data: str = "",
+        scripts: str = "",
+    ) -> object:
+        """Return an iframe containing a single download button."""
+        _svg = html_escape(logo.as_svg())
+        return mo.iframe(
+            f"""
+    <body style="{_body_style}">
+    <style>{_css}</style>
+    <button class="download-btn" type="button" onclick="download{action}(this)"
+      data-svg="{_svg}"
+      data-ext="{action.lower()}"{extra_data}>
+    {_icon}<span class="download-label">{label}</span>
+    </button>
+    {scripts}
+    <script>{_js}</script>
+    </body>
+    """,
+            height="48px",
+        )
+
+    return (iframe_button,)
 
 
 if __name__ == "__main__":
