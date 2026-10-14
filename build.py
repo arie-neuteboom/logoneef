@@ -1,4 +1,4 @@
-"""Build the marimo WASM site and derive the dist/ favicons from logoneef.svg."""
+"""Build the marimo WASM site and derive the dist/ favicons from favicon.svg."""
 
 import logging
 import re
@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 ROOT = Path(__file__).parent
 DIST = ROOT / "dist"
-LOGO_SVG = ROOT / "logoneef.svg"
+LOGO_SVG = ROOT / "favicon.svg"
 
 SVG_NS = "http://www.w3.org/2000/svg"
 ET.register_namespace("", SVG_NS)
@@ -54,7 +54,7 @@ def export_wasm() -> None:
 
 
 def favicon_svg() -> str:
-    """Build the favicon SVG from logoneef.svg.
+    """Build the favicon SVG from favicon.svg.
 
     Strips the fixed width/height (keeping the viewBox) so the icon scales,
     removes the empty defs element, and rounds all numbers to two decimals.

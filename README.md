@@ -15,7 +15,7 @@ A standalone marimo web app that renders a parametric logo with `svgwrite` from 
    ```
 
 3. **Build the WASM site:**
-   `build.py` also generates the favicon files in `dist/` from `logoneef.svg`.
+   `build.py` also generates the favicon files in `dist/` from `favicon.svg`.
    ```bash
    uv run build.py
    uv run python -m http.server 8000 --directory dist
