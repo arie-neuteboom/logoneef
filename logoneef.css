@@ -1,0 +1,4 @@
+[data-cell-role="output"] {
+    max-height: none !important;
+    overflow-y: visible !important;
+}

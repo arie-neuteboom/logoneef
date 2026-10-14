@@ -1,0 +1,35 @@
+[project]
+name = "logoneef"
+version = "0.1.0"
+description = "Parametric logo GUI with marimo and drawsvg"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "marimo>=0.23.15",
+    "drawsvg>=2.4",
+    "cairosvg>=2.7",
+    "pillow>=10.4",
+    "pycairo>=1.29.0",
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.6",
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py314"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP"]
+
+[tool.marimo.formatting]
+line_length = 88
+
+[tool.marimo.display]
+theme = "system"
+
+[tool.marimo.runtime]
+auto_instantiate = true
+on_cell_change = "autorun"
