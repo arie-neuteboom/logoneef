@@ -1,6 +1,6 @@
 # Logoneef — Parametric Logo GUI
 
-A standalone marimo web app that renders a parametric logo with `drawsvg` from an editable marimo cell, previews it live, and exports as SVG or PDF.
+A standalone marimo web app that renders a parametric logo with `svgwrite` from an editable marimo cell, previews it live, and exports as SVG or PDF.
 
 ## Quickstart
 
@@ -11,11 +11,18 @@ A standalone marimo web app that renders a parametric logo with `drawsvg` from a
 
 2. **Run the app:**
    ```bash
-   uv run marimo run app.py --host 0.0.0.0 --port 2718 --headless
+   uvx marimo edit --sandbox logoneef.py
    ```
 
-3. **Access the app:**
-   Open `http://localhost:2718` in your browser.
+3. **Build the WASM site:**
+   `build.py` also generates the favicon files in `dist/` from `logoneef.svg`.
+   ```bash
+   uv run build.py
+   uv run python -m http.server 8000 --directory dist
+   ```
+
+4. **Access the app:**
+   Open `http://localhost:8000` in your browser.
 
 ## Features
 
@@ -28,7 +35,7 @@ A standalone marimo web app that renders a parametric logo with `drawsvg` from a
 - **Python**: 3.14+
 - **Package manager**: `uv`
 - **Linting**: `ruff`
-- **Framework**: marimo + drawsvg
+- **Framework**: marimo + svgwrite
 
 ## Source
 
