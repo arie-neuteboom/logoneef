@@ -77,13 +77,13 @@ def _(logo):
     _pdf_bytes = svg_to_pdf(_svg_str, float(logo["width"]), float(logo["height"]))
 
     download_svg = mo.download(
-        data=lambda: _svg_bytes,
+        data=_svg_bytes,
         filename="logoneef.svg",
         mimetype="image/svg+xml",
         label="Download logo as svg",
     )
     download_pdf = mo.download(
-        data=lambda: _pdf_bytes,
+        data=_pdf_bytes,
         filename="logoneef.pdf",
         mimetype="application/pdf",
         label="Download logo as pdf",

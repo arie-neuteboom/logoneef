@@ -31,7 +31,11 @@ ICO_SIZES = [16, 32, 48]
 
 
 def export_wasm() -> None:
-    """Export logoneef.py to a WASM site in dist/."""
+    """Export logoneef.py to a WASM site in dist/.
+
+    Outputs are not pre-rendered: the page stays empty until the browser
+    kernel has run all cells, so no data is embedded in the HTML.
+    """
     logger.info("Exporting marimo WASM site to %s", DIST)
     subprocess.run(
         [
@@ -44,13 +48,27 @@ def export_wasm() -> None:
             "dist",
             "--mode",
             "edit",
-            "--execute",
             "--force",
             "--sandbox",
         ],
         cwd=ROOT,
         check=True,
     )
+
+
+def enable_autorun() -> None:
+    """Make the WASM kernel run all cells on page load.
+
+    marimo's html-wasm export embeds its hardcoded default config, which
+    has auto_instantiate disabled in edit mode.
+    """
+    index = DIST / "index.html"
+    html = index.read_text(encoding="utf-8")
+    patched = html.replace('"auto_instantiate": false', '"auto_instantiate": true', 1)
+    if patched == html:
+        raise RuntimeError("auto_instantiate not found in dist/index.html")
+    index.write_text(patched, encoding="utf-8")
+    logger.info("Enabled auto_instantiate in %s", index)
 
 
 def favicon_svg() -> str:
@@ -95,9 +113,10 @@ def write_icons(svg: str) -> None:
 
 
 def main() -> None:
-    """Export the WASM site, then overwrite its favicon files."""
+    """Export the WASM site, enable autorun, then overwrite its favicon files."""
     svg = favicon_svg()
     export_wasm()
+    enable_autorun()
     write_icons(svg)
 
 
