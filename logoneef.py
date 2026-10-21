@@ -133,6 +133,13 @@ def _():
         d_heigth = 5.0 * cm
         d = svgwrite.Drawing(size=(d_width, d_heigth))
         d.viewbox(-d_width / 2, -d_heigth / 2, d_width, d_heigth)
+        d.add(
+            d.rect(
+                insert=(-d_width / 2, -d_heigth / 2),
+                size=(d_width, d_heigth),
+                fill="none",
+            )
+        )
         b = 0.4 * cm  # radius head
         q_small = 1.5  # head-body ratio small neefje
         q_big = 2  # head-body ratio big neefje
