@@ -77,16 +77,16 @@ def _(logo):
     _pdf_bytes = svg_to_pdf(_svg_str, float(logo["width"]), float(logo["height"]))
 
     download_svg = mo.download(
-        data=_svg_bytes,
+        data=lambda: _svg_bytes,
         filename="logoneef.svg",
         mimetype="image/svg+xml",
-        label="Download logo as svg",
+        label="Download het logo als .svg",
     )
     download_pdf = mo.download(
-        data=_pdf_bytes,
+        data=lambda: _pdf_bytes,
         filename="logoneef.pdf",
         mimetype="application/pdf",
-        label="Download logo as pdf",
+        label="Download het logo als .pdf",
     )
     mo.vstack(
         [
@@ -101,34 +101,11 @@ def _(logo):
     return
 
 
-@app.function(hide_code=True)
-def svg_to_pdf(svg_str: str, width: float, height: float) -> bytes:
-    """Convert an SVG string to PDF bytes using fpdf2.
-
-    The SVG is embedded as vector paths, so the same code path serves both
-    CPython and the Pyodide/WASM deployment. Width and height are CSS
-    pixels (96 dpi) and are converted to PDF points (72 dpi) so the page
-    has the same physical size as the on-screen logo. fpdf2 reads unitless
-    SVG sizes as points, so the top-level width/height are ignored and the
-    viewBox is scaled to the full page instead. fpdf2 only supports a
-    subset of SVG (no text, markers, patterns, filters, masks);
-    unsupported features are logged as warnings by the ``fpdf.svg`` logger.
-    """
-    pdf = FPDF(unit="pt", format=(width * 72 / 96, height * 72 / 96))
-    pdf.add_page()
-    _, _, paths = SVGObject(svg_str).transform_to_rect_viewport(
-        pdf.k, pdf.w, pdf.h, ignore_svg_top_attrs=True
-    )
-    pdf.draw_path(paths)
-    return bytes(pdf.output())
-
-
 @app.cell
 def _():
-    # Standard screen DPI (96) divided by cm per inch (2.54) = pixels per cm
-    cm = 96 / 2.54  # centimeter pixel ratio
-
     def create_logo() -> svgwrite.Drawing:
+        # Standard screen DPI (96) divided by cm per inch (2.54) = pixels per cm
+        cm = 96 / 2.54  # centimeter pixel ratio
         d_width = 7.2 * cm
         d_heigth = 5.0 * cm
         d = svgwrite.Drawing(size=(d_width, d_heigth))
@@ -285,6 +262,28 @@ def append_neefje(
     push_arc(body, p22.x, p22.y, r_r, 0, 90)
     body.push("M", p23.x, p23.y, "L", p24.x, p24.y)  # right line
     d.add(body)
+
+
+@app.function(hide_code=True)
+def svg_to_pdf(svg_str: str, width: float, height: float) -> bytes:
+    """Convert an SVG string to PDF bytes using fpdf2.
+
+    The SVG is embedded as vector paths, so the same code path serves both
+    CPython and the Pyodide/WASM deployment. Width and height are CSS
+    pixels (96 dpi) and are converted to PDF points (72 dpi) so the page
+    has the same physical size as the on-screen logo. fpdf2 reads unitless
+    SVG sizes as points, so the top-level width/height are ignored and the
+    viewBox is scaled to the full page instead. fpdf2 only supports a
+    subset of SVG (no text, markers, patterns, filters, masks);
+    unsupported features are logged as warnings by the ``fpdf.svg`` logger.
+    """
+    pdf = FPDF(unit="pt", format=(width * 72 / 96, height * 72 / 96))
+    pdf.add_page()
+    _, _, paths = SVGObject(svg_str).transform_to_rect_viewport(
+        pdf.k, pdf.w, pdf.h, ignore_svg_top_attrs=True
+    )
+    pdf.draw_path(paths)
+    return bytes(pdf.output())
 
 
 if __name__ == "__main__":
