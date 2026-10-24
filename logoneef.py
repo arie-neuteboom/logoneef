@@ -114,7 +114,7 @@ def _():
             d.rect(
                 insert=(-d_width / 2, -d_heigth / 2),
                 size=(d_width, d_heigth),
-                fill="none",
+                fill="lightgrey",
             )
         )
         b = 0.4 * cm  # radius head
